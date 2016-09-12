@@ -83,6 +83,34 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
     return array($headers, $data);
   }
 
+  private function receiveECC($data) {
+    $adapter = EccFactory::getAdapter();
+    $generator = EccFactory::getNistCurves()->generator384();
+    $algorithm = 'sha256';
+    $sigData = base64_decode($data->sign);
+
+    // Parse signature
+    $sigSerializer = new DerSignatureSerializer();
+    $sig = $sigSerializer->parse($sigData);
+
+    // Parse public key
+    $keyData = file_get_contents('../tests/data/openssl-pub.pem');
+    $derSerializer = new DerPublicKeySerializer($adapter);
+    $pemSerializer = new PemPublicKeySerializer($derSerializer);
+    $key = $pemSerializer->parse($this->COINAPULTPUB_PEM);
+
+    $signer = new Signer($adapter);
+    $hash = $signer->hashData($generator, $algorithm, $data->content);
+    $check = $signer->verify($key, $sig, $hash);
+    if ($check) {
+      $obj = json_decode($data->content);
+      $obj->validSign = true;
+    } else {
+      $obj->validSign = false;
+    }
+    return $obj;
+  }
+
   /* Make a call to the Coinapult API. */
   private function request($method, $params, $sign=TRUE, $post=TRUE) {
     $headers = array();
