@@ -78,7 +78,7 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
     $signature = $signer->sign($this->privkey->key, $hash, $randomK);
     $serializer = new DerSignatureSerializer();
     $serializedSig = $serializer->serialize($signature);
-    $headers[] = 'cpt-ecc-sign: ' . base64_encode($serializedSig);
+    $headers[] = 'cpt-ecc-sign: ' . bin2hex($serializedSig);
     
     return array($headers, $data);
   }
@@ -148,7 +148,7 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
     }
     curl_close($handle);
 
-    $data = json_decode($result, true);
+    $data = json_decode($result);
     return $data;
   }
 
