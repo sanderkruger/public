@@ -3,6 +3,7 @@
 use Mdanter\Ecc\EccFactory;
 use Mdanter\Ecc\Crypto\Signature\Signer;
 use Mdanter\Ecc\Serializer\Signature\DerSignatureSerializer;
+use Mdanter\Ecc\Serializer\Signature\HexSignatureSerializer;
 
 class Coinapult
 {
@@ -76,9 +77,9 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
 
     $randomK = $random->generate($generator->getOrder());
     $signature = $signer->sign($this->privkey->key, $hash, $randomK);
-    $serializer = new DerSignatureSerializer();
+    $serializer = new HexSignatureSerializer();
     $serializedSig = $serializer->serialize($signature);
-    $headers[] = 'cpt-ecc-sign: ' . bin2hex($serializedSig);
+    $headers[] = 'cpt-ecc-sign: ' . $serializedSig;
     
     return array($headers, $data);
   }
