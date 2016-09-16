@@ -91,7 +91,7 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
     $generator = EccFactory::getSecgCurves()->generator256k1();
     $algorithm = 'sha256';
 
-    // Parse signature
+    // Parse signature: split 128-char string into 2 64-char hex numbers
     $sigSerializer = new HexSignatureSerializer();
     $sig = $sigSerializer->parse($content->sign);
 
@@ -104,7 +104,7 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
     $hash = $signer->hashData($generator, $algorithm, $content->data);
     $check = $signer->verify($key, $sig, $hash);
     if ($check) {
-      $obj = json_decode($content->data);
+      $obj = json_decode(base64_decode($content->data));
       $obj->validSign = true;
     } else {
       $obj = new stdClass();
@@ -285,7 +285,7 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
   public function create_account() {
     $params = array('newAccount' => true);
     $data = $this->request('account/create', $params, true, true);
-     if (isset($data->error)) {
+    if (isset($data->error)) {
       return 'Error';
     } else {
       $rdata = $this->receiveECC($data);
