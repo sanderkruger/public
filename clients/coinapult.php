@@ -64,7 +64,7 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
 
     $data = base64_encode(json_encode($params));
     $adapter = EccFactory::getAdapter();
-    $generator = EccFactory::getNistCurves()->generator384();
+    $generator = EccFactory::getSecgCurves()->generator256k1();
     $useDerandomizedSignatures = true;
     $algorithm = 'sha256';
 
@@ -88,7 +88,7 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
 
   private function receiveECC($content) {
     $adapter = EccFactory::getAdapter();
-    $generator = EccFactory::getNistCurves()->generator384();
+    $generator = EccFactory::getSecgCurves()->generator256k1();
     $algorithm = 'sha256';
 
     // Parse signature
