@@ -4,6 +4,8 @@ use Mdanter\Ecc\EccFactory;
 use Mdanter\Ecc\Crypto\Signature\Signer;
 use Mdanter\Ecc\Serializer\Signature\DerSignatureSerializer;
 use Mdanter\Ecc\Serializer\Signature\HexSignatureSerializer;
+use Mdanter\Ecc\Serializer\PublicKey\DerPublicKeySerializer;
+use Mdanter\Ecc\Serializer\PublicKey\PemPublicKeySerializer;
 
 class Coinapult
 {
@@ -84,29 +86,28 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
     return array($headers, $data);
   }
 
-  private function receiveECC($data) {
+  private function receiveECC($content) {
     $adapter = EccFactory::getAdapter();
     $generator = EccFactory::getNistCurves()->generator384();
     $algorithm = 'sha256';
-    $sigData = base64_decode($data->sign);
 
     // Parse signature
-    $sigSerializer = new DerSignatureSerializer();
-    $sig = $sigSerializer->parse($sigData);
+    $sigSerializer = new HexSignatureSerializer();
+    $sig = $sigSerializer->parse($content->sign);
 
     // Parse public key
-    $keyData = file_get_contents('../tests/data/openssl-pub.pem');
     $derSerializer = new DerPublicKeySerializer($adapter);
     $pemSerializer = new PemPublicKeySerializer($derSerializer);
-    $key = $pemSerializer->parse($this->COINAPULTPUB_PEM);
+    $key = $pemSerializer->parse(self::$COINAPULTPUB_PEM);
 
     $signer = new Signer($adapter);
-    $hash = $signer->hashData($generator, $algorithm, $data->content);
+    $hash = $signer->hashData($generator, $algorithm, $content->data);
     $check = $signer->verify($key, $sig, $hash);
     if ($check) {
-      $obj = json_decode($data->content);
+      $obj = json_decode($content->data);
       $obj->validSign = true;
     } else {
+      $obj = new stdClass();
       $obj->validSign = false;
     }
     return $obj;
@@ -284,8 +285,7 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
   public function create_account() {
     $params = array('newAccount' => true);
     $data = $this->request('account/create', $params, true, true);
-    var_dump($data);
-    if ($data->error) {
+     if (isset($data->error)) {
       return 'Error';
     } else {
       $rdata = $this->receiveECC($data);
