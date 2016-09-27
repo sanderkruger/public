@@ -2,7 +2,6 @@
 
 use Mdanter\Ecc\EccFactory;
 use Mdanter\Ecc\Crypto\Signature\Signer;
-use Mdanter\Ecc\Serializer\Signature\DerSignatureSerializer;
 use Mdanter\Ecc\Serializer\Signature\HexSignatureSerializer;
 use Mdanter\Ecc\Serializer\PublicKey\DerPublicKeySerializer;
 use Mdanter\Ecc\Serializer\PublicKey\PemPublicKeySerializer;
@@ -168,8 +167,12 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
     return $this->request('ticker', $params, $sign=FALSE, $post=FALSE);
   }
 
-  public function account_info() {
-    return $this->request('accountInfo', array());
+  public function account_info($balanceType=NULL) {
+    $params = array();
+    if (isset($balanceType)) {
+        $params['balanceType'] = $balanceType;
+    }
+    return $this->request('accountInfo', $params);
   }
 
   public function get_bitcoin_address() {
@@ -282,6 +285,20 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
     return $res;
   }
 
+  public function activate_account() {
+    $params = array('newAccount' => true, 'agree' => 1, 'hash' => $this->pubkey->hash);
+    $data = $this->request('account/activate', $params, true, true);
+    if (isset($data->error)) {
+      return 'Error';
+    } else {
+      $rdata = $this->receiveECC($data);
+      if ($rdata->validSign && isset($rdata->status) && $rdata->status == 'activated') {
+        return 'Success';
+      }
+    }
+    return 'Error';
+  }
+
   public function create_account() {
     $params = array('newAccount' => true);
     $data = $this->request('account/create', $params, true, true);
@@ -301,12 +318,8 @@ LBq8RwigNE6nOOXFEoGCjGfekugjrHWHUi8ms7bcfrowpaJKqMfZXg==
 
 /* Auxiliary function for sending signed requests to Coinapult. */
 function gen_nonce($length=22) {
-  $b58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  $nonce = '';
-  for ($i = 0; $i < $length; $i++) {
-    $char = $b58[mt_rand(0, 57)];
-    $nonce = $nonce . $char;
-  }
+  $bytes = openssl_random_pseudo_bytes(ceil($length/2));
+  $nonce = bin2hex($bytes);
   return $nonce;
 }
 
